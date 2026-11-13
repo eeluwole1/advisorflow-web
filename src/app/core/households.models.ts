@@ -1,4 +1,4 @@
-// Mirrors the API contract in apps/api/AdvisorFlow.Api/Domain/Dtos.cs (blueprint §11.7).
+   // Mirrors advisorflow-api contract v1 (docs/api/openapi.v1.yaml); see api-contract.ts.
 
 export type ClientStatus = 'Prospect' | 'Active' | 'Inactive';
 
