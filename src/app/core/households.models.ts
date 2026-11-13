@@ -1,4 +1,4 @@
-   // Mirrors advisorflow-api contract v1 (docs/api/openapi.v1.yaml); see api-contract.ts.
+// Mirrors advisorflow-api contract v1 (docs/api/openapi.v1.yaml); see api-contract.ts.
 
 export type ClientStatus = 'Prospect' | 'Active' | 'Inactive';
 
