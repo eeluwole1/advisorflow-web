@@ -1,0 +1,149 @@
+<div class="grid grid-cols-1 lg:h-full lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+  <!-- Household list -->
+  <section
+    class="flex min-h-0 flex-col border-slate-200 lg:border-r"
+    aria-labelledby="clients-heading"
+  >
+    <header class="border-b border-slate-200 bg-white px-6 pt-6 pb-4">
+      <div class="flex items-baseline justify-between gap-4">
+        <h1 id="clients-heading" class="text-xl font-semibold tracking-tight">Clients</h1>
+        @if (result(); as r) {
+          <p class="text-sm text-slate-500" data-testid="total-count">
+            {{ r.totalCount }} {{ r.totalCount === 1 ? 'household' : 'households' }}
+          </p>
+        }
+      </div>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <label class="relative flex-1">
+          <span class="sr-only">Search households</span>
+          <svg
+            class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9 3.5a5.5 5.5 0 1 0 3.4 9.83l3.13 3.14a.75.75 0 1 0 1.06-1.06l-3.13-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search households"
+            class="w-full rounded-lg border border-slate-300 bg-white py-2 pr-3 pl-9 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+            [value]="searchText()"
+            (input)="onSearch($any($event.target).value)"
+          />
+        </label>
+        <label>
+          <span class="sr-only">Filter by client status</span>
+          <select
+            class="w-full rounded-lg border border-slate-300 bg-white py-2 pr-8 pl-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none sm:w-44"
+            [value]="status()"
+            (change)="onStatus($any($event.target).value)"
+          >
+            <option value="">All statuses</option>
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <div class="min-h-0 flex-1 bg-white lg:overflow-y-auto">
+      @if (households.error()) {
+        <div
+          class="m-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          role="alert"
+        >
+          <p class="font-medium">Households couldn't be loaded.</p>
+          <p class="mt-1 text-red-700">
+            Check that the API is running on port 5080, then try again.
+          </p>
+          <button
+            type="button"
+            class="mt-3 rounded-md bg-white px-3 py-1.5 font-medium ring-1 ring-red-200 hover:bg-red-100"
+            (click)="households.reload()"
+          >
+            Retry
+          </button>
+        </div>
+      } @else if (result(); as r) {
+        @if (r.items.length === 0) {
+          <p class="px-6 py-12 text-center text-sm text-slate-500">
+            No households match your filters.
+          </p>
+        } @else {
+          <ul class="divide-y divide-slate-100" [class.opacity-60]="households.isLoading()">
+            @for (h of r.items; track h.id) {
+              <li>
+                <a
+                  [routerLink]="[h.id]"
+                  routerLinkActive="bg-brand-50/70 shadow-[inset_3px_0_0_var(--color-brand-500)]"
+                  class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-6 py-3.5 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+                >
+                  <span class="truncate font-medium">{{ h.name }}</span>
+                  <app-status-badge [status]="h.clientStatus" />
+                  <span class="truncate text-sm text-slate-500">
+                    {{ h.primaryContactName ?? 'No primary member' }}
+                    <span class="text-slate-300">·</span>
+                    {{ h.memberCount }} {{ h.memberCount === 1 ? 'member' : 'members' }}
+                  </span>
+                  <span class="text-right text-xs text-slate-500">
+                    @if (h.priority) {
+                      {{ h.priority }} priority
+                    }
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <ul class="divide-y divide-slate-100" aria-label="Loading households">
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <li class="px-6 py-4">
+              <div class="h-4 w-1/2 animate-pulse rounded bg-slate-100"></div>
+              <div class="mt-2 h-3 w-1/3 animate-pulse rounded bg-slate-100"></div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    @if (result(); as r) {
+      @if (r.totalPages > 1) {
+        <nav
+          class="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-3 text-sm"
+          aria-label="Pagination"
+        >
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 font-medium ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-40"
+            [disabled]="r.page <= 1"
+            (click)="goTo(r.page - 1)"
+          >
+            Previous
+          </button>
+          <span class="text-slate-500">Page {{ r.page }} of {{ r.totalPages }}</span>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 font-medium ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-40"
+            [disabled]="r.page >= r.totalPages"
+            (click)="goTo(r.page + 1)"
+          >
+            Next
+          </button>
+        </nav>
+      }
+    }
+  </section>
+
+  <!-- Selected household -->
+  <section class="min-h-0 bg-slate-50 lg:overflow-y-auto">
+    <router-outlet />
+  </section>
+</div>

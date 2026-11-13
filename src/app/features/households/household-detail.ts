@@ -1,0 +1,23 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, input } from '@angular/core';
+import { householdMembersResource, householdResource } from '../../core/households.api';
+import { StatusBadge } from '../../shared/status-badge';
+import { HouseholdMembers } from '../contacts/household-members';
+
+@Component({
+  selector: 'app-household-detail',
+  imports: [StatusBadge, HouseholdMembers],
+  templateUrl: './household-detail.html',
+})
+export class HouseholdDetail {
+  /** Bound from the :id route parameter. */
+  readonly id = input<string>();
+
+  protected readonly household = householdResource(this.id);
+  protected readonly members = householdMembersResource(this.id);
+
+  protected readonly notFound = computed(() => {
+    const err = this.household.error();
+    return err instanceof HttpErrorResponse && (err.status === 404 || err.status === 400);
+  });
+}
