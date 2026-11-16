@@ -31,3 +31,32 @@ jobs:
         run: npx ng test --watch=false
       - name: Dependency audit (high and critical)
         run: npm audit --audit-level=high --omit=dev
+
+  deploy:
+    name: Deploy to Azure Static Web Apps
+    # Only pushes to main, and only after the build and tests have passed.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-test]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://zealous-pebble-02abce610.4.azurestaticapps.net
+    concurrency:
+      group: deploy-web
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Production build
+        run: npx ng build
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          # Upload the finished build; Azure does not build it again.
+          app_location: dist/advisorflow-web/browser
+          skip_app_build: true
