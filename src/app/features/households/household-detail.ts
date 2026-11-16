@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth';
 import { HouseholdMember } from '../../core/households.models';
 import { householdMembersResource, householdResource } from '../../core/households.api';
@@ -16,6 +17,7 @@ import { HouseholdForm } from './household-form';
 @Component({
   selector: 'app-household-detail',
   imports: [
+    RouterLink,
     StatusBadge,
     HouseholdMembers,
     HouseholdOpportunities,

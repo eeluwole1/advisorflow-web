@@ -2,7 +2,9 @@
   <!-- Household list -->
   <section
     class="flex min-h-0 flex-col border-slate-200 lg:border-r"
+    [class]="showingHousehold() ? 'max-lg:hidden' : ''"
     aria-labelledby="clients-heading"
+    data-testid="household-list"
   >
     <header class="border-b border-slate-200 bg-white px-6 pt-6 pb-4">
       <div class="flex items-baseline justify-between gap-4">
@@ -150,8 +152,12 @@
   </section>
 
   <!-- Selected household -->
-  <section class="min-h-0 bg-slate-50 lg:overflow-y-auto">
-    <router-outlet />
+  <section
+    class="min-h-0 bg-slate-50 lg:overflow-y-auto"
+    [class]="showingHousehold() ? '' : 'max-lg:hidden'"
+    data-testid="household-pane"
+  >
+    <router-outlet (activate)="onActivate($event)" (deactivate)="showingHousehold.set(false)" />
   </section>
 </div>
 

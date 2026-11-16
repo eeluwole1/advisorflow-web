@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth';
 import { HouseholdDetail } from '../../core/households.models';
 import { StatusBadge } from '../../shared/status-badge';
 import { HouseholdForm } from './household-form';
+import { HouseholdDetail as HouseholdDetailView } from './household-detail';
 
 const PAGE_SIZE = 10;
 
@@ -19,6 +20,16 @@ const PAGE_SIZE = 10;
 export class HouseholdsPage {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  /**
+   * A household is open in the right-hand pane. On phones and small tablets
+   * the list and the household take turns on screen instead of stacking.
+   */
+  protected readonly showingHousehold = signal(false);
+
+  protected onActivate(component: unknown): void {
+    this.showingHousehold.set(component instanceof HouseholdDetailView);
+  }
 
   /** The New household form is open. */
   protected readonly creating = signal(false);

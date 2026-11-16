@@ -8,6 +8,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { routes } from './app.routes';
 import { firstValueFrom } from 'rxjs';
 import { App } from './app';
 import { AuthService } from './core/auth';
@@ -191,6 +193,93 @@ describe('Sidebar sign-in', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelector('[data-testid="account"]'),
     ).toBeNull();
+  });
+});
+
+describe('Mobile header', () => {
+  const mobileAccount = (root: HTMLElement) =>
+    root.querySelector<HTMLElement>('[data-testid="mobile-account"]');
+
+  it('offers Sign in on small screens', async () => {
+    const auth = fakeAuth({ signedIn: false });
+    setup(auth);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const account = mobileAccount(fixture.nativeElement)!;
+    expect(account.textContent).toContain('Sign in');
+    account.querySelector('button')!.click();
+    expect(auth.signIn).toHaveBeenCalled();
+  });
+
+  it('shows the advisor initials and Sign out once signed in', async () => {
+    const auth = fakeAuth({ signedIn: true });
+    setup(auth);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const account = mobileAccount(fixture.nativeElement)!;
+    expect(account.textContent).toContain('AA');
+    expect(account.querySelector('[aria-label]')?.getAttribute('aria-label')).toBe(
+      'Signed in as Ada Advisor',
+    );
+    account.querySelector('button')!.click();
+    expect(auth.signOut).toHaveBeenCalled();
+  });
+
+  it('lists every page in the mobile tabs', async () => {
+    setup();
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const links = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('nav[aria-label="Main (mobile)"] a'),
+    );
+    expect(links.map((a) => a.textContent?.trim())).toEqual([
+      'Clients',
+      'Opportunities',
+      'Activities',
+      'Dashboard',
+    ]);
+  });
+
+  it('hides the account area when sign-in is not configured', async () => {
+    setup(fakeAuth({ configured: false }));
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(mobileAccount(fixture.nativeElement)).toBeNull();
+  });
+});
+
+describe('Clients on small screens', () => {
+  function setupRoutes() {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(routes),
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: '' },
+        { provide: AuthService, useValue: fakeAuth() },
+      ],
+    });
+  }
+  const pane = (root: HTMLElement, id: string) =>
+    root.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
+
+  it('shows the list and hides the empty pane when nothing is selected', async () => {
+    setupRoutes();
+    const harness = await RouterTestingHarness.create('/clients');
+    const root = harness.routeNativeElement!;
+    expect(pane(root, 'household-list').classList).not.toContain('max-lg:hidden');
+    expect(pane(root, 'household-pane').classList).toContain('max-lg:hidden');
+  });
+
+  it('shows the household instead of the list once one is opened', async () => {
+    setupRoutes();
+    const harness = await RouterTestingHarness.create('/clients/001HH0000000001');
+    harness.detectChanges();
+    const root = harness.routeNativeElement!;
+    expect(pane(root, 'household-list').classList).toContain('max-lg:hidden');
+    expect(pane(root, 'household-pane').classList).not.toContain('max-lg:hidden');
+    // The static layout classes survive the binding.
+    expect(pane(root, 'household-list').classList).toContain('flex');
   });
 });
 
