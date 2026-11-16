@@ -354,13 +354,15 @@ describe('DashboardPage', () => {
     expect(bars[3].getAttribute('title')).toContain('60% probability');
   });
 
-  it('shows a dash for win rate when nothing has closed', async () => {
+  it('explains the missing win rate when nothing has closed', async () => {
     const el = await render({
       ...summary,
       outcomes: { ...summary.outcomes, wonCount: 0, lostCount: 0, winRate: null, lossReasons: [] },
     });
 
-    expect(el.querySelector('[data-testid="win-rate"]')?.textContent?.trim()).toBe('—');
+    expect(el.querySelector('[data-testid="win-rate"]')?.textContent?.trim()).toBe(
+      'No closed deals yet',
+    );
     expect(el.querySelector('[data-testid="loss-reasons"]')).toBeNull();
   });
 });

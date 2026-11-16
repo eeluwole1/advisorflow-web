@@ -48,16 +48,20 @@
         </div>
         <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
           <p class="text-sm font-medium text-slate-500">Win rate</p>
-          <p class="mt-1 text-3xl font-semibold" data-testid="win-rate">
-            @if (s.outcomes.winRate !== null) {
+          @if (s.outcomes.winRate !== null) {
+            <p class="mt-1 text-3xl font-semibold" data-testid="win-rate">
               {{ s.outcomes.winRate | percent: '1.0-0' }}
-            } @else {
-              —
-            }
-          </p>
-          <p class="mt-1 text-sm text-slate-500">
-            {{ s.outcomes.wonCount }} won · {{ s.outcomes.lostCount }} lost
-          </p>
+            </p>
+            <p class="mt-1 text-sm text-slate-500">
+              {{ s.outcomes.wonCount }} won · {{ s.outcomes.lostCount }} lost
+            </p>
+          } @else {
+            <!-- No closed deals yet: a rate would be meaningless, so say so instead of showing 0% or a dash. -->
+            <p class="mt-2 text-lg font-semibold text-slate-700" data-testid="win-rate">
+              No closed deals yet
+            </p>
+            <p class="mt-1 text-sm text-slate-500">Appears once a deal is won or lost</p>
+          }
         </div>
         <a
           routerLink="/activities"
