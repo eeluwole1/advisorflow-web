@@ -19,11 +19,7 @@ interface NavItem {
         data-testid="mobile-header"
       >
         <a routerLink="/clients" class="flex items-center gap-2">
-          <span
-            class="grid size-7 place-items-center rounded-lg bg-brand-500 text-xs font-bold text-white"
-            aria-hidden="true"
-            >A</span
-          >
+          <img src="favicon.svg" alt="" class="size-7" width="28" height="28" />
           <span class="text-[15px] font-semibold tracking-tight text-white">AdvisorFlow</span>
         </a>
         @if (auth.configured) {
@@ -72,11 +68,7 @@ interface NavItem {
 
       <aside class="hidden w-60 shrink-0 flex-col bg-ink text-slate-300 md:flex">
         <div class="flex items-center gap-2.5 px-5 py-5">
-          <span
-            class="grid size-8 place-items-center rounded-lg bg-brand-500 text-sm font-bold text-white"
-            aria-hidden="true"
-            >A</span
-          >
+          <img src="favicon.svg" alt="" class="size-8" width="32" height="32" />
           <span class="text-[15px] font-semibold tracking-tight text-white">AdvisorFlow</span>
         </div>
 
