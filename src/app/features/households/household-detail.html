@@ -9,7 +9,7 @@
     <button
       type="button"
       class="ml-2 font-medium underline"
-      (click)="household.reload(); members.reload(); opportunities.reload()"
+      (click)="household.reload(); members.reload(); opportunities.reload(); activities.reload()"
     >
       Retry
     </button>
@@ -80,6 +80,23 @@
         <app-household-opportunities class="mt-3 block" [opportunities]="opportunities.value()" />
       } @else if (opportunities.error()) {
         <p class="mt-3 text-sm text-red-700">Opportunities couldn't be loaded.</p>
+      } @else {
+        <div class="mt-3 h-16 animate-pulse rounded-xl bg-white ring-1 ring-slate-200"></div>
+      }
+    </section>
+
+    <section class="mt-8" aria-labelledby="followups-heading">
+      <h3
+        id="followups-heading"
+        class="text-sm font-semibold tracking-wide text-slate-500 uppercase"
+      >
+        Follow-ups
+      </h3>
+
+      @if (activities.hasValue()) {
+        <app-household-activities class="mt-3 block" [activities]="activities.value()" />
+      } @else if (activities.error()) {
+        <p class="mt-3 text-sm text-red-700">Follow-ups couldn't be loaded.</p>
       } @else {
         <div class="mt-3 h-16 animate-pulse rounded-xl bg-white ring-1 ring-slate-200"></div>
       }

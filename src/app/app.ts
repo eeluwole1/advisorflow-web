@@ -60,7 +60,7 @@ export class App {
   protected readonly nav: NavItem[] = [
     { label: 'Clients', link: '/clients' },
     { label: 'Opportunities', link: '/opportunities' },
-    { label: 'Activities', milestone: 'M5' },
+    { label: 'Activities', link: '/activities' },
     { label: 'Dashboard', milestone: 'M6' },
   ];
 }

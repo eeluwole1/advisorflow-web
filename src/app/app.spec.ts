@@ -9,6 +9,8 @@ import { HouseholdsPage } from './features/households/households-page';
 import { HouseholdDetail } from './features/households/household-detail';
 import { Opportunity } from './core/opportunities.models';
 import { OpportunitiesPage } from './features/opportunities/opportunities-page';
+import { Activity } from './core/activities.models';
+import { ActivitiesPage } from './features/activities/activities-page';
 
 const page: PagedResponse<HouseholdSummary> = {
   items: [
@@ -82,6 +84,27 @@ const pipeline: PagedResponse<Opportunity> = {
   totalPages: 1,
 };
 
+function activity(overrides: Partial<Activity>): Activity {
+  return {
+    id: '00TMOCK00000000001',
+    subject: 'Qualification follow-up: Williams Household - Retirement Planning',
+    status: 'Not Started',
+    priority: 'Normal',
+    dueDate: '2026-11-12',
+    isClosed: false,
+    isOverdue: true,
+    householdId: '001MOCK00000000001',
+    householdName: 'Williams Household',
+    relatedToId: '006MOCK00000000001',
+    relatedToName: 'Williams Household - Retirement Planning',
+    relatedToType: 'Opportunity',
+    contactName: null,
+    ownerName: 'Demo Advisor',
+    automation: 'Qualification follow-up',
+    ...overrides,
+  };
+}
+
 function setup() {
   TestBed.configureTestingModule({
     providers: [
@@ -103,7 +126,11 @@ describe('App shell', () => {
     expect(text).toContain('Clients');
     expect(text).not.toContain('M4');
     const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('nav a'));
-    expect(links.map((a) => a.textContent?.trim())).toEqual(['Clients', 'Opportunities']);
+    expect(links.map((a) => a.textContent?.trim())).toEqual([
+      'Clients',
+      'Opportunities',
+      'Activities',
+    ]);
   });
 });
 
@@ -168,6 +195,92 @@ describe('OpportunitiesPage', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
       "Opportunities couldn't be loaded",
+    );
+  });
+});
+
+describe('ActivitiesPage', () => {
+  const openTasks: PagedResponse<Activity> = {
+    items: [
+      activity({}),
+      activity({
+        id: '00TMOCK00000000003',
+        subject: 'Call Amara about RESP contributions',
+        dueDate: '2026-11-18',
+        isOverdue: false,
+        priority: 'High',
+        householdId: '001MOCK00000000002',
+        householdName: 'Okafor Household',
+        relatedToId: '001MOCK00000000002',
+        relatedToName: 'Okafor Household',
+        relatedToType: 'Household',
+        contactName: 'Amara Okafor',
+        automation: null,
+      }),
+    ],
+    page: 1,
+    pageSize: 20,
+    totalCount: 2,
+    totalPages: 1,
+  };
+
+  it('lists open tasks with overdue, priority and Flow-created tags', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(ActivitiesPage);
+    TestBed.tick();
+    const req = http.expectOne((r) => r.url === '/api/activities');
+    expect(req.request.params.get('state')).toBe('open');
+    req.flush(openTasks);
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="total-count"]')?.textContent).toContain('2 open tasks');
+    const tasks = Array.from(el.querySelectorAll('[data-testid="task"]'));
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].querySelector('[data-testid="overdue"]')).not.toBeNull();
+    expect(tasks[0].querySelector('[data-testid="automation"]')?.textContent).toContain(
+      'Qualification follow-up',
+    );
+    expect(tasks[0].textContent).toContain('Williams Household - Retirement Planning');
+    expect(tasks[1].querySelector('[data-testid="overdue"]')).toBeNull();
+    expect(tasks[1].textContent).toContain('High priority');
+    expect(tasks[1].textContent).toContain('Amara Okafor');
+    expect(tasks[1].querySelector('a')?.getAttribute('href')).toBe('/clients/001MOCK00000000002');
+  });
+
+  it('switches to the overdue view and shows a friendly empty state', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(ActivitiesPage);
+    TestBed.tick();
+    http.expectOne((r) => r.url === '/api/activities').flush(openTasks);
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const overdue = Array.from(el.querySelectorAll<HTMLButtonElement>('button')).find(
+      (b) => b.textContent?.trim() === 'Overdue',
+    )!;
+    overdue.click();
+    TestBed.tick();
+    const req = http.expectOne((r) => r.url === '/api/activities');
+    expect(req.request.params.get('state')).toBe('overdue');
+    req.flush({ items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
+    await fixture.whenStable();
+
+    expect(overdue.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('[data-testid="empty"]')?.textContent).toContain('Nothing is overdue');
+  });
+
+  it('shows a retry message when the API fails', async () => {
+    const http = setup();
+    const fixture = TestBed.createComponent(ActivitiesPage);
+    TestBed.tick();
+    http
+      .expectOne((r) => r.url === '/api/activities')
+      .flush(null, { status: 503, statusText: 'Unavailable' });
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      "Tasks couldn't be loaded",
     );
   });
 });
@@ -271,6 +384,17 @@ describe('HouseholdDetail', () => {
     http
       .expectOne('/api/households/001MOCK00000000001/opportunities')
       .flush([opportunity({}), opportunity({ id: '006B', stage: 'Closed Won', isClosed: true })]);
+    http.expectOne('/api/households/001MOCK00000000001/activities').flush([
+      activity({}),
+      activity({
+        id: '00TB',
+        subject: 'Send a thank-you note',
+        isClosed: true,
+        isOverdue: false,
+        status: 'Completed',
+        automation: null,
+      }),
+    ]);
     await fixture.whenStable();
 
     const el = fixture.nativeElement as HTMLElement;
@@ -291,6 +415,12 @@ describe('HouseholdDetail', () => {
     expect(opps[0]).toContain('Qualification');
     expect(opps[0]).toContain('Advisory fee');
     expect(opps[1]).toContain('Closed Won');
+
+    const followUps = Array.from(el.querySelectorAll('[data-testid="activity"]'));
+    expect(followUps).toHaveLength(2);
+    expect(followUps[0].querySelector('[data-testid="overdue"]')).not.toBeNull();
+    expect(followUps[1].textContent).toContain('Completed');
+    expect(followUps[1].textContent).toContain('Was due');
   });
 
   it('shows not-found for a 404', async () => {
@@ -307,6 +437,9 @@ describe('HouseholdDetail', () => {
       .flush(null, { status: 404, statusText: 'Not Found' });
     http
       .expectOne('/api/households/001MOCK99999999999/opportunities')
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    http
+      .expectOne('/api/households/001MOCK99999999999/activities')
       .flush(null, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
