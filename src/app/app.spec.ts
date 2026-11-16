@@ -127,7 +127,9 @@ describe('App shell', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Clients');
     expect(text).not.toContain('M4');
-    const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('aside nav a'));
+    const links = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('aside nav a'),
+    );
     expect(links.map((a) => a.textContent?.trim())).toEqual([
       'Clients',
       'Opportunities',
