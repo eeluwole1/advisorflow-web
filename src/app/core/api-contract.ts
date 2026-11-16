@@ -4,6 +4,6 @@
  *
  * Compatibility: this app works with any 1.x API, since minor versions only add
  * optional fields and endpoints. When the API publishes 2.0.0, update the models in
- * households.models.ts and this constant in the same pull request.
+ * households.models.ts and opportunities.models.ts and this constant in the same pull request.
  */
-export const API_CONTRACT_VERSION = '1.0.0';
+export const API_CONTRACT_VERSION = '1.3.0';

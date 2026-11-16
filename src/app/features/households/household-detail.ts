@@ -1,12 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, input } from '@angular/core';
 import { householdMembersResource, householdResource } from '../../core/households.api';
+import { householdOpportunitiesResource } from '../../core/opportunities.api';
 import { StatusBadge } from '../../shared/status-badge';
 import { HouseholdMembers } from '../contacts/household-members';
+import { HouseholdOpportunities } from '../opportunities/household-opportunities';
 
 @Component({
   selector: 'app-household-detail',
-  imports: [StatusBadge, HouseholdMembers],
+  imports: [StatusBadge, HouseholdMembers, HouseholdOpportunities],
   templateUrl: './household-detail.html',
 })
 export class HouseholdDetail {
@@ -15,6 +17,7 @@ export class HouseholdDetail {
 
   protected readonly household = householdResource(this.id);
   protected readonly members = householdMembersResource(this.id);
+  protected readonly opportunities = householdOpportunitiesResource(this.id);
 
   protected readonly notFound = computed(() => {
     const err = this.household.error();

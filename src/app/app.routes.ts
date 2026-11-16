@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HouseholdsPage } from './features/households/households-page';
 import { HouseholdDetail } from './features/households/household-detail';
 import { NoSelection } from './features/households/no-selection';
+import { OpportunitiesPage } from './features/opportunities/opportunities-page';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'clients' },
@@ -14,5 +15,6 @@ export const routes: Routes = [
       { path: ':id', component: HouseholdDetail },
     ],
   },
+  { path: 'opportunities', component: OpportunitiesPage, title: 'Opportunities · AdvisorFlow' },
   { path: '**', redirectTo: 'clients' },
 ];
