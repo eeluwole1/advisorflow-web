@@ -1,5 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { AuthService } from '../../core/auth';
+import { HouseholdMember } from '../../core/households.models';
 import { householdMembersResource, householdResource } from '../../core/households.api';
 import { householdActivitiesResource } from '../../core/activities.api';
 import { householdOpportunitiesResource } from '../../core/opportunities.api';
@@ -7,13 +9,31 @@ import { StatusBadge } from '../../shared/status-badge';
 import { HouseholdActivities } from '../activities/household-activities';
 import { HouseholdMembers } from '../contacts/household-members';
 import { HouseholdOpportunities } from '../opportunities/household-opportunities';
+import { MemberForm } from '../contacts/member-form';
+import { OpportunityForm } from '../opportunities/opportunity-form';
+import { HouseholdForm } from './household-form';
 
 @Component({
   selector: 'app-household-detail',
-  imports: [StatusBadge, HouseholdMembers, HouseholdOpportunities, HouseholdActivities],
+  imports: [
+    StatusBadge,
+    HouseholdMembers,
+    HouseholdOpportunities,
+    HouseholdActivities,
+    HouseholdForm,
+    MemberForm,
+    OpportunityForm,
+  ],
   templateUrl: './household-detail.html',
 })
 export class HouseholdDetail {
+  protected readonly auth = inject(AuthService);
+
+  /** Which form is open, if any. A member value edits that member; 'new' adds one. */
+  protected readonly editingHousehold = signal(false);
+  protected readonly editingMember = signal<HouseholdMember | 'new' | null>(null);
+  protected readonly creatingOpportunity = signal(false);
+
   /** Bound from the :id route parameter. */
   readonly id = input<string>();
 

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth';
 
 interface NavItem {
   label: string;
@@ -45,6 +46,35 @@ interface NavItem {
           }
         </nav>
 
+        @if (auth.configured) {
+          <div class="mx-3 mb-1 rounded-lg bg-white/5 px-3 py-3" data-testid="account">
+            @if (auth.signedIn()) {
+              <p class="text-xs text-slate-400">Signed in as</p>
+              <p class="truncate text-sm font-medium text-white" [title]="auth.displayName()">
+                {{ auth.displayName() }}
+              </p>
+              <button
+                type="button"
+                class="mt-2 text-xs font-medium text-slate-300 underline hover:text-white"
+                (click)="auth.signOut()"
+              >
+                Sign out
+              </button>
+            } @else {
+              <p class="text-xs leading-relaxed text-slate-400">
+                Viewing only. Advisors sign in to make changes.
+              </p>
+              <button
+                type="button"
+                class="mt-2 w-full rounded-md bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
+                (click)="auth.signIn()"
+              >
+                Sign in
+              </button>
+            }
+          </div>
+        }
+
         <p class="px-5 py-4 text-xs leading-relaxed text-slate-500">
           Prototype · fictional data only
         </p>
@@ -56,7 +86,18 @@ interface NavItem {
     </div>
   `,
 })
-export class App {
+export class App implements OnInit {
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  ngOnInit(): void {
+    // Back to the page the advisor was on before the sign-in redirect.
+    const returnUrl = this.auth.takeReturnUrl();
+    if (returnUrl) {
+      void this.router.navigateByUrl(returnUrl);
+    }
+  }
+
   protected readonly nav: NavItem[] = [
     { label: 'Clients', link: '/clients' },
     { label: 'Opportunities', link: '/opportunities' },

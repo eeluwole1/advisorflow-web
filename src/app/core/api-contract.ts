@@ -6,4 +6,4 @@
  * optional fields and endpoints. When the API publishes 2.0.0, update the models in
  * households.models.ts, opportunities.models.ts, activities.models.ts, dashboard.models.ts and this constant in the same pull request.
  */
-export const API_CONTRACT_VERSION = '1.5.0';
+export const API_CONTRACT_VERSION = '1.6.0';

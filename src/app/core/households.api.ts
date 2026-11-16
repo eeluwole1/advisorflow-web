@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { InjectionToken, Signal, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { DataRefresh } from './data-refresh';
 import {
   HouseholdDetail,
   HouseholdListQuery,
@@ -22,7 +23,9 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
 /** Reactive household list that refetches whenever the query signal changes. */
 export function householdsResource(query: Signal<HouseholdListQuery>) {
   const base = inject(API_BASE_URL);
+  const refresh = inject(DataRefresh);
   return httpResource<PagedResponse<HouseholdSummary>>(() => {
+    refresh.version();
     const q = query();
     const params: Record<string, string | number> = { page: q.page, pageSize: q.pageSize };
     if (q.search.trim()) params['search'] = q.search.trim();
@@ -34,7 +37,9 @@ export function householdsResource(query: Signal<HouseholdListQuery>) {
 /** Household detail for the selected id; idle when no household is selected. */
 export function householdResource(id: Signal<string | undefined>) {
   const base = inject(API_BASE_URL);
+  const refresh = inject(DataRefresh);
   return httpResource<HouseholdDetail>(() => {
+    refresh.version();
     const value = id();
     return value ? `${base}/api/households/${encodeURIComponent(value)}` : undefined;
   });
@@ -43,7 +48,9 @@ export function householdResource(id: Signal<string | undefined>) {
 /** Members (Contacts) of the selected household. */
 export function householdMembersResource(id: Signal<string | undefined>) {
   const base = inject(API_BASE_URL);
+  const refresh = inject(DataRefresh);
   return httpResource<HouseholdMember[]>(() => {
+    refresh.version();
     const value = id();
     return value ? `${base}/api/households/${encodeURIComponent(value)}/contacts` : undefined;
   });

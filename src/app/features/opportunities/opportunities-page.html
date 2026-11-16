@@ -152,6 +152,12 @@
                     High priority
                   </p>
                 }
+                @if (auth.signedIn() && !o.isClosed) {
+                  <app-stage-mover
+                    class="mt-2 block border-t border-slate-100 pt-2"
+                    [opportunity]="o"
+                  />
+                }
               </li>
             } @empty {
               <li class="px-1 py-4 text-center text-xs text-slate-400">None</li>

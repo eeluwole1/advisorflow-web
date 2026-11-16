@@ -3,11 +3,12 @@ import { Component, input } from '@angular/core';
 import { Opportunity } from '../../core/opportunities.models';
 import { todayIso } from '../../shared/dates';
 import { StageBadge } from '../../shared/stage-badge';
+import { StageMover } from './stage-mover';
 
 /** A household's opportunities, ordered by close date (as the API returns them). */
 @Component({
   selector: 'app-household-opportunities',
-  imports: [CurrencyPipe, DatePipe, StageBadge],
+  imports: [CurrencyPipe, DatePipe, StageBadge, StageMover],
   template: `
     @if (opportunities().length === 0) {
       <p
@@ -38,6 +39,9 @@ import { StageBadge } from '../../shared/stage-badge';
                 <span class="text-slate-300">·</span> {{ o.lossReason }}
               }
             </p>
+            @if (editable() && !o.isClosed) {
+              <app-stage-mover class="mt-2 block" [opportunity]="o" />
+            }
           </li>
         }
       </ul>
@@ -46,5 +50,7 @@ import { StageBadge } from '../../shared/stage-badge';
 })
 export class HouseholdOpportunities {
   readonly opportunities = input.required<Opportunity[]>();
+  /** Shows the stage mover (a signed-in advisor). */
+  readonly editable = input(false);
   protected readonly today = todayIso();
 }

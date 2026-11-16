@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { HouseholdMember } from '../../core/households.models';
 
 /** Members (Contacts) of one household; the API returns the primary member first. */
@@ -25,13 +25,25 @@ import { HouseholdMember } from '../../core/households.models';
                   >
                 }
               </p>
-              <p class="text-xs text-slate-500">
-                @if (m.preferredContactMethod) {
-                  Prefers <span class="font-medium text-ink">{{ m.preferredContactMethod }}</span>
-                } @else {
-                  <span class="text-amber-700">No contact preference</span>
+              <div class="flex items-center gap-3">
+                <p class="text-xs text-slate-500">
+                  @if (m.preferredContactMethod) {
+                    Prefers <span class="font-medium text-ink">{{ m.preferredContactMethod }}</span>
+                  } @else {
+                    <span class="text-amber-700">No contact preference</span>
+                  }
+                </p>
+                @if (editable()) {
+                  <button
+                    type="button"
+                    class="af-btn-secondary af-btn-small"
+                    [attr.aria-label]="'Edit ' + m.fullName"
+                    (click)="edit.emit(m)"
+                  >
+                    Edit
+                  </button>
                 }
-              </p>
+              </div>
             </div>
             <p class="mt-1 truncate text-sm text-slate-500">
               {{ m.email ?? 'No email' }} <span class="text-slate-300">·</span>
@@ -45,4 +57,7 @@ import { HouseholdMember } from '../../core/households.models';
 })
 export class HouseholdMembers {
   readonly members = input.required<HouseholdMember[]>();
+  /** Shows Edit buttons (a signed-in advisor). */
+  readonly editable = input(false);
+  readonly edit = output<HouseholdMember>();
 }

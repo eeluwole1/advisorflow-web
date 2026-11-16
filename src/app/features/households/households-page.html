@@ -7,11 +7,18 @@
     <header class="border-b border-slate-200 bg-white px-6 pt-6 pb-4">
       <div class="flex items-baseline justify-between gap-4">
         <h1 id="clients-heading" class="text-xl font-semibold tracking-tight">Clients</h1>
-        @if (result(); as r) {
-          <p class="text-sm text-slate-500" data-testid="total-count">
-            {{ r.totalCount }} {{ r.totalCount === 1 ? 'household' : 'households' }}
-          </p>
-        }
+        <div class="flex items-baseline gap-3">
+          @if (result(); as r) {
+            <p class="text-sm text-slate-500" data-testid="total-count">
+              {{ r.totalCount }} {{ r.totalCount === 1 ? 'household' : 'households' }}
+            </p>
+          }
+          @if (auth.signedIn()) {
+            <button type="button" class="af-btn-primary af-btn-small" (click)="creating.set(true)">
+              + New household
+            </button>
+          }
+        </div>
       </div>
 
       <div class="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -147,3 +154,7 @@
     <router-outlet />
   </section>
 </div>
+
+@if (creating()) {
+  <app-household-form (done)="onCreated($event)" />
+}

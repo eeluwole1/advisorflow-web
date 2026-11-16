@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -10,7 +10,9 @@ import {
   OpportunityListQuery,
   OpportunityStage,
 } from '../../core/opportunities.models';
+import { AuthService } from '../../core/auth';
 import { todayIso } from '../../shared/dates';
+import { StageMover } from './stage-mover';
 
 interface StageColumn {
   stage: OpportunityStage;
@@ -21,15 +23,17 @@ interface StageColumn {
 
 /**
  * The opportunity pipeline (M4): one column per stage of the AdvisorFlow Advisory sales
- * process, ordered by close date within each column. Read-only; changes are made through
- * the API (and, in deployed environments, only once sign-in exists, ADR-009).
+ * process, ordered by close date within each column. A signed-in advisor can move a card to
+ * another stage (BR-OP-004); everyone else sees it read-only (ADR-015).
  */
 @Component({
   selector: 'app-opportunities-page',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, StageMover],
   templateUrl: './opportunities-page.html',
 })
 export class OpportunitiesPage {
+  protected readonly auth = inject(AuthService);
+
   protected readonly pageSize = PIPELINE_PAGE_SIZE;
   protected readonly today = todayIso();
 

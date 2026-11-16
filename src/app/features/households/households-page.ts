@@ -1,19 +1,35 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { householdsResource } from '../../core/households.api';
 import { CLIENT_STATUSES, ClientStatus, HouseholdListQuery } from '../../core/households.models';
+import { AuthService } from '../../core/auth';
+import { HouseholdDetail } from '../../core/households.models';
 import { StatusBadge } from '../../shared/status-badge';
+import { HouseholdForm } from './household-form';
 
 const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-households-page',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, StatusBadge],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, StatusBadge, HouseholdForm],
   templateUrl: './households-page.html',
 })
 export class HouseholdsPage {
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  /** The New household form is open. */
+  protected readonly creating = signal(false);
+
+  protected onCreated(household: HouseholdDetail | null): void {
+    this.creating.set(false);
+    if (household) {
+      void this.router.navigate(['/clients', household.id]);
+    }
+  }
+
   protected readonly statuses = CLIENT_STATUSES;
 
   protected readonly searchText = signal('');
