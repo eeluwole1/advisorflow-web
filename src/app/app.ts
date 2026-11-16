@@ -61,6 +61,6 @@ export class App {
     { label: 'Clients', link: '/clients' },
     { label: 'Opportunities', link: '/opportunities' },
     { label: 'Activities', link: '/activities' },
-    { label: 'Dashboard', milestone: 'M6' },
+    { label: 'Dashboard', link: '/dashboard' },
   ];
 }

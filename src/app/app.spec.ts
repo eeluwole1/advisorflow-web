@@ -11,6 +11,8 @@ import { Opportunity } from './core/opportunities.models';
 import { OpportunitiesPage } from './features/opportunities/opportunities-page';
 import { Activity } from './core/activities.models';
 import { ActivitiesPage } from './features/activities/activities-page';
+import { DashboardSummary } from './core/dashboard.models';
+import { DashboardPage } from './features/dashboard/dashboard-page';
 
 const page: PagedResponse<HouseholdSummary> = {
   items: [
@@ -130,6 +132,7 @@ describe('App shell', () => {
       'Clients',
       'Opportunities',
       'Activities',
+      'Dashboard',
     ]);
   });
 });
@@ -282,6 +285,83 @@ describe('ActivitiesPage', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
       "Tasks couldn't be loaded",
     );
+  });
+});
+
+describe('DashboardPage', () => {
+  const summary: DashboardSummary = {
+    asOf: '2026-11-16',
+    pipeline: {
+      openCount: 5,
+      openFees: 30500,
+      weightedFees: 16650,
+      stages: [
+        { stage: 'Prospecting', count: 1, fees: 0, probability: 10, weightedFees: 0 },
+        { stage: 'Qualification', count: 1, fees: 4500, probability: 10, weightedFees: 450 },
+        { stage: 'Needs Assessment', count: 1, fees: 6000, probability: 30, weightedFees: 1800 },
+        { stage: 'Proposal Presented', count: 1, fees: 12000, probability: 60, weightedFees: 7200 },
+        { stage: 'Negotiation/Review', count: 1, fees: 8000, probability: 90, weightedFees: 7200 },
+      ],
+    },
+    outcomes: {
+      wonCount: 1,
+      wonFees: 2500,
+      lostCount: 1,
+      lostFees: 3000,
+      winRate: 0.5,
+      lossReasons: [{ name: 'Timing', count: 1 }],
+    },
+    activities: { open: 6, overdue: 2, dueNext7Days: 2, completed: 2, openFromAutomation: 2 },
+    households: {
+      total: 7,
+      byStatus: [
+        { name: 'Prospect', count: 3 },
+        { name: 'Active', count: 3 },
+        { name: 'Inactive', count: 1 },
+      ],
+    },
+  };
+
+  async function render(body: DashboardSummary = summary) {
+    const http = setup();
+    const fixture = TestBed.createComponent(DashboardPage);
+    TestBed.tick();
+    http.expectOne('/api/dashboard').flush(body);
+    await fixture.whenStable();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows the headline figures from the API', async () => {
+    const el = await render();
+
+    expect(el.querySelector('[data-testid="open-fees"]')?.textContent).toContain('$30,500');
+    expect(el.querySelector('[data-testid="weighted-fees"]')?.textContent).toContain('$16,650');
+    expect(el.querySelector('[data-testid="win-rate"]')?.textContent).toContain('50%');
+    expect(el.querySelector('[data-testid="overdue"]')?.textContent).toContain('2');
+    expect(el.querySelector('[data-testid="overdue"]')?.textContent).toContain('Needs attention');
+    expect(el.querySelector('[data-testid="households"]')?.textContent).toContain('Prospect');
+  });
+
+  it('draws one bar per open stage, scaled to the largest stage', async () => {
+    const el = await render();
+
+    const bars = Array.from(el.querySelectorAll<HTMLElement>('[data-testid="stage-bar"]'));
+    expect(bars).toHaveLength(5);
+    const width = (i: number) => bars[i].querySelector<HTMLElement>('.bg-brand-500')!.style.width;
+    expect(width(3)).toBe('100%'); // Proposal Presented, the largest
+    expect(width(2)).toBe('50%'); // 6,000 of 12,000
+    expect(width(0)).toBe('0%'); // no fees
+    expect(bars[3].getAttribute('title')).toContain('60% probability');
+  });
+
+  it('shows a dash for win rate when nothing has closed', async () => {
+    const el = await render({
+      ...summary,
+      outcomes: { ...summary.outcomes, wonCount: 0, lostCount: 0, winRate: null, lossReasons: [] },
+    });
+
+    expect(el.querySelector('[data-testid="win-rate"]')?.textContent?.trim()).toBe('—');
+    expect(el.querySelector('[data-testid="loss-reasons"]')).toBeNull();
   });
 });
 

@@ -1,0 +1,217 @@
+<section class="h-full overflow-y-auto bg-slate-50" aria-labelledby="dashboard-heading">
+  <header class="border-b border-slate-200 bg-white px-6 pt-6 pb-4">
+    <div class="flex items-baseline justify-between gap-4">
+      <h1 id="dashboard-heading" class="text-xl font-semibold tracking-tight">Dashboard</h1>
+      @if (summary(); as s) {
+        <p class="text-sm text-slate-500">As of {{ s.asOf | date: 'MMM d, y' }}</p>
+      }
+    </div>
+  </header>
+
+  @if (dashboard.error()) {
+    <div
+      class="m-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+      role="alert"
+    >
+      <p class="font-medium">The dashboard couldn't be loaded.</p>
+      <p class="mt-1 text-red-700">
+        The service may be starting up, which can take up to a minute. Please try again.
+      </p>
+      <button
+        type="button"
+        class="mt-3 rounded-md bg-white px-3 py-1.5 font-medium ring-1 ring-red-200 hover:bg-red-100"
+        (click)="dashboard.reload()"
+      >
+        Retry
+      </button>
+    </div>
+  } @else if (summary(); as s) {
+    <div class="space-y-6 p-6">
+      <!-- Headline: one hero figure, three supporting tiles -->
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
+        <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+          <p class="text-sm font-medium text-slate-500">Open pipeline</p>
+          <p class="mt-1 text-5xl font-semibold tracking-tight" data-testid="open-fees">
+            {{ s.pipeline.openFees | currency: 'CAD' : 'symbol-narrow' : '1.0-0' }}
+          </p>
+          <p class="mt-1 text-sm text-slate-500">
+            in advisory fees across {{ s.pipeline.openCount }} open
+            {{ s.pipeline.openCount === 1 ? 'opportunity' : 'opportunities' }}
+          </p>
+        </div>
+        <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+          <p class="text-sm font-medium text-slate-500">Weighted forecast</p>
+          <p class="mt-1 text-3xl font-semibold" data-testid="weighted-fees">
+            {{ s.pipeline.weightedFees | currency: 'CAD' : 'symbol-narrow' : '1.0-0' }}
+          </p>
+          <p class="mt-1 text-sm text-slate-500">fees × stage probability</p>
+        </div>
+        <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+          <p class="text-sm font-medium text-slate-500">Win rate</p>
+          <p class="mt-1 text-3xl font-semibold" data-testid="win-rate">
+            @if (s.outcomes.winRate !== null) {
+              {{ s.outcomes.winRate | percent: '1.0-0' }}
+            } @else {
+              —
+            }
+          </p>
+          <p class="mt-1 text-sm text-slate-500">
+            {{ s.outcomes.wonCount }} won · {{ s.outcomes.lostCount }} lost
+          </p>
+        </div>
+        <a
+          routerLink="/activities"
+          class="rounded-xl bg-white p-5 ring-1 ring-slate-200 hover:ring-slate-300"
+          aria-label="Overdue follow-ups: open the Activities page"
+        >
+          <p class="text-sm font-medium text-slate-500">Overdue follow-ups</p>
+          <p
+            class="mt-1 flex items-center gap-2 text-3xl font-semibold"
+            [class.text-red-700]="s.activities.overdue > 0"
+            data-testid="overdue"
+          >
+            {{ s.activities.overdue }}
+            @if (s.activities.overdue > 0) {
+              <span
+                class="rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200"
+                >Needs attention</span
+              >
+            }
+          </p>
+          <p class="mt-1 text-sm text-slate-500">of {{ s.activities.open }} open follow-ups</p>
+        </a>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <!-- Pipeline by stage: one series, one hue, thin bars, values at the bar end -->
+        <div class="self-start rounded-xl bg-white p-5 ring-1 ring-slate-200">
+          <h2 class="font-semibold">Open pipeline by stage</h2>
+          <p class="text-sm text-slate-500">Advisory fees, not assets under management</p>
+          <ul class="mt-5 space-y-4" aria-label="Advisory fees by stage">
+            @for (st of stageBars(); track st.stage) {
+              <li
+                class="grid grid-cols-[9.5rem_minmax(0,1fr)] items-center gap-3"
+                data-testid="stage-bar"
+                [title]="
+                  st.stage +
+                  ': ' +
+                  st.count +
+                  (st.count === 1 ? ' opportunity, ' : ' opportunities, ') +
+                  (st.fees | currency: 'CAD' : 'symbol-narrow' : '1.0-0') +
+                  ' in fees, ' +
+                  st.probability +
+                  '% probability, ' +
+                  (st.weightedFees | currency: 'CAD' : 'symbol-narrow' : '1.0-0') +
+                  ' weighted'
+                "
+              >
+                <span class="text-sm text-slate-600">
+                  {{ st.stage }}
+                  <span class="text-slate-400">({{ st.count }})</span>
+                </span>
+                <span class="flex items-center gap-2">
+                  <span class="h-3 flex-1 rounded-r bg-slate-100">
+                    <span
+                      class="block h-3 rounded-r bg-brand-500"
+                      [style.width.%]="st.width"
+                    ></span>
+                  </span>
+                  <span class="w-20 text-right text-sm font-medium tabular-nums">{{
+                    st.fees | currency: 'CAD' : 'symbol-narrow' : '1.0-0'
+                  }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+          <p class="mt-5 text-xs text-slate-500">
+            Weighted forecast uses each stage's probability: Prospecting and Qualification 10%,
+            Needs Assessment 30%, Proposal Presented 60%, Negotiation/Review 90%.
+          </p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Outcomes -->
+          <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+            <h2 class="font-semibold">Closed opportunities</h2>
+            <dl class="mt-3 grid grid-cols-2 gap-4">
+              <div>
+                <dt class="text-sm text-slate-500">Won</dt>
+                <dd class="text-xl font-semibold" data-testid="won">
+                  {{ s.outcomes.wonCount }}
+                  <span class="text-sm font-normal text-slate-500">{{
+                    s.outcomes.wonFees | currency: 'CAD' : 'symbol-narrow' : '1.0-0'
+                  }}</span>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-sm text-slate-500">Lost</dt>
+                <dd class="text-xl font-semibold" data-testid="lost">
+                  {{ s.outcomes.lostCount }}
+                  <span class="text-sm font-normal text-slate-500">{{
+                    s.outcomes.lostFees | currency: 'CAD' : 'symbol-narrow' : '1.0-0'
+                  }}</span>
+                </dd>
+              </div>
+            </dl>
+            @if (s.outcomes.lossReasons.length > 0) {
+              <p class="mt-4 text-sm font-medium text-slate-600">Why deals were lost</p>
+              <ul class="mt-1 text-sm text-slate-600" data-testid="loss-reasons">
+                @for (r of s.outcomes.lossReasons; track r.name) {
+                  <li class="flex justify-between border-b border-slate-100 py-1">
+                    <span>{{ r.name }}</span><span class="tabular-nums">{{ r.count }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <!-- Follow-ups -->
+          <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+            <h2 class="font-semibold">Follow-ups</h2>
+            <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+              <div>
+                <dt class="text-slate-500">Open</dt>
+                <dd class="text-xl font-semibold">{{ s.activities.open }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Due in the next 7 days</dt>
+                <dd class="text-xl font-semibold" data-testid="due-soon">
+                  {{ s.activities.dueNext7Days }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Created by the follow-up Flow</dt>
+                <dd class="text-xl font-semibold">{{ s.activities.openFromAutomation }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Completed</dt>
+                <dd class="text-xl font-semibold">{{ s.activities.completed }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Households -->
+          <div class="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+            <h2 class="font-semibold">
+              Households <span class="font-normal text-slate-500">({{ s.households.total }})</span>
+            </h2>
+            <dl class="mt-3 flex gap-6 text-sm" data-testid="households">
+              @for (h of s.households.byStatus; track h.name) {
+                <div>
+                  <dt class="text-slate-500">{{ h.name }}</dt>
+                  <dd class="text-xl font-semibold">{{ h.count }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="grid gap-4 p-6 lg:grid-cols-4" aria-label="Loading the dashboard">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="h-28 animate-pulse rounded-xl bg-white ring-1 ring-slate-200"></div>
+      }
+    </div>
+  }
+</section>
